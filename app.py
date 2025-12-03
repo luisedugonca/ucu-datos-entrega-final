@@ -100,7 +100,7 @@ st.dataframe(desc_global)
 st.markdown('<h2 id="controles" data-anchor="controles">Controles y filtros</h2>', unsafe_allow_html=True)
 st.sidebar.markdown("## Controles")
 st.sidebar.markdown(
-    "Usá los filtros para acotar por **HouseAge** y **Latitud mínima (vecindario)**."
+    "Usa los filtros para acotar por **HouseAge** y **Latitud mínima (vecindario)**."
 )
 
 houseage_min = float(df_california["HouseAge"].min())
