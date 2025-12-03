@@ -127,6 +127,11 @@ if use_lat_filter and not df_f.empty:
     )
     df_f = df_f.loc[df_f["Latitude"] >= lat_min].copy()
 
+# Controles de apariencia de gráficos
+st.sidebar.markdown("## Apariencia de gráficos")
+chart_height = st.sidebar.slider("Alto de gráficos (px)", 300, 900, 420)
+compact = st.sidebar.checkbox("Modo compacto (centrado y ancho limitado)", value=True)
+
 # Describe post-filtros
 st.markdown("**Describe del subconjunto filtrado**")
 if df_f.empty:
@@ -146,14 +151,26 @@ else:
     c2.metric("Mediana MedHouseVal", f"{mediana:,.3f}")
     c3.metric("Rango (max - min)", f"{rango:,.3f}")
 
+# ======= Helpers para visualizaciones compactas =======
+def get_container():
+    """Devuelve un contenedor centrado y más angosto si compact=True;
+    de lo contrario, devuelve st (uso del ancho completo)."""
+    if compact:
+        col_left, col_mid, col_right = st.columns([1, 2, 1])
+        return col_mid
+    return st
+
 #  Sección: Visualizaciones  
 st.markdown('<h2 id="vis" data-anchor="vis">Visualizaciones</h2>', unsafe_allow_html=True)
 
 # Histograma (tema oscuro)
 st.subheader("Distribución de MedHouseVal (tras filtros)")
 if not df_f.empty:
+    target = get_container()
+
     if USE_MPL:
-        fig1, ax1 = plt.subplots(figsize=(6, 4), facecolor="black")
+        # Ajuste de tamaño: alto controlado con slider (px -> pulgadas con dpi=100)
+        fig1, ax1 = plt.subplots(figsize=(6.5, chart_height/100), dpi=100, facecolor="black")
         ax1.set_facecolor("black")
         ax1.hist(df_f["MedHouseVal"], bins=30, color="#CCCCCC", edgecolor="#CCCCCC", alpha=0.75)
         for sp in ax1.spines.values():
@@ -162,36 +179,46 @@ if not df_f.empty:
         ax1.set_xlabel("MedHouseVal", color="white")
         ax1.set_ylabel("Frecuencia", color="white")
         ax1.set_title("Histograma de MedHouseVal", color="white")
-        st.pyplot(fig1)
+        target.pyplot(fig1)
     else:
         fig1 = px.histogram(df_f, x="MedHouseVal", nbins=30, title="Histograma de MedHouseVal")
-        fig1.update_layout(template="plotly_dark", paper_bgcolor="black", plot_bgcolor="black", font_color="white")
-        st.plotly_chart(fig1, use_container_width=True)
+        fig1.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="black", plot_bgcolor="black", font_color="white",
+            height=chart_height, margin=dict(l=40, r=20, t=50, b=40)
+        )
+        target.plotly_chart(fig1, use_container_width=True)
 else:
     st.info("Sin datos para graficar.")
 
 # Scatter (tema oscuro)
 st.subheader("Relación: MedInc (X) vs MedHouseVal (Y)")
 if not df_f.empty:
+    target = get_container()
+
     if USE_MPL:
-        fig2, ax2 = plt.subplots(figsize=(6, 4), facecolor="black")
+        fig2, ax2 = plt.subplots(figsize=(6.5, chart_height/100), dpi=100, facecolor="black")
         ax2.set_facecolor("black")
-        ax2.scatter(df_f["MedInc"], df_f["MedHouseVal"], s=10, alpha=0.8, color="#CCCCCC")
+        ax2.scatter(df_f["MedInc"], df_f["MedHouseVal"], s=10, alpha=0.85, color="#DDDDDD")
         for sp in ax2.spines.values():
             sp.set_color("white")
         ax2.tick_params(colors="white")
         ax2.set_xlabel("MedInc (Mediana de Ingresos)", color="white")
         ax2.set_ylabel("MedHouseVal (Valor mediano vivienda)", color="white")
         ax2.set_title("Scatter: MedInc vs MedHouseVal", color="white")
-        st.pyplot(fig2)
+        target.pyplot(fig2)
     else:
         fig2 = px.scatter(
             df_f, x="MedInc", y="MedHouseVal",
-            opacity=0.85, title="Scatter: MedInc vs MedHouseVal",
+            opacity=0.9, title="Scatter: MedInc vs MedHouseVal",
             labels={"MedInc":"MedInc (Mediana de Ingresos)", "MedHouseVal":"Valor mediano vivienda"}
         )
-        fig2.update_layout(template="plotly_dark", paper_bgcolor="black", plot_bgcolor="black", font_color="white")
-        st.plotly_chart(fig2, use_container_width=True)
+        fig2.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="black", plot_bgcolor="black", font_color="white",
+            height=chart_height, margin=dict(l=40, r=20, t=50, b=40)
+        )
+        target.plotly_chart(fig2, use_container_width=True)
 else:
     st.info("Sin datos para graficar.")
 
